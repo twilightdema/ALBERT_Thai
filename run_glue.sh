@@ -47,11 +47,11 @@ function run_task() {
       --albert_config_file="${ALBERT_CONFIG_FILE}"
 }
 
-run_task SST-2 1256 1e-5 20935 100 32
-run_task MNLI 1000 3e-5 10000 100 128
-run_task CoLA 320 1e-5 5336 100 16
-run_task QNLI 1986 1e-5 33112 200 32
-run_task QQP 1000 5e-5 14000 100 128
-run_task RTE 200 3e-5 800 100 32
-run_task STS-B 214 2e-5 3598 100 16
-run_task MRPC 200 2e-5 800 100 32
+run_task SST-2 1256 1e-5 20935 1000 32
+run_task MNLI 1000 3e-5 10000 1000 128
+run_task CoLA 320 1e-5 5336 1000 16
+run_task QNLI 1986 1e-5 33112 2000 32
+run_task QQP 1000 5e-5 14000 1000 128
+run_task RTE 200 3e-5 800 1000 32
+run_task STS-B 214 2e-5 3598 1000 16
+run_task MRPC 200 2e-5 800 1000 32
