@@ -1,0 +1,19 @@
+python3 run_classifier_th.py \
+--albert_config_file=albert.custom.json \
+--task_name=wisesight \
+--output_dir=exports_best2010_wisesight \
+--export_dir=exports_best2010_wisesight \
+--train_batch_size=32 \
+--eval_batch_size=32 \
+--do_train=True \
+--do_eval=True \
+--use_tpu=False \
+--data_dir=. \
+--vocab_file best2010_best2010.lm.spm_vocab \
+--spm_model_file best2010_best2010.lm.spm_model \
+--max_seq_length=256 \
+--init_checkpoint=outputs_best2010.lm \
+--train_step=22560 \
+--save_checkpoints_steps=752 \
+--keep_checkpoint_max=9999 \
+--iterations_per_loop=752 \

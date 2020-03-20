@@ -1,0 +1,1 @@
+python3 train_spm.py best2010_best2010.lm.txt

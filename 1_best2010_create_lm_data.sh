@@ -1,0 +1,1 @@
+python3 create_pretraining_data.py --input_file best2010_best2010.lm.untoken.txt --output_file best2010_best2010.lm.tfrecord --vocab_file best2010_best2010.lm.spm_vocab --spm_model_file best2010_best2010.lm.spm_model --dupe_factor 1

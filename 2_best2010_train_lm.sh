@@ -1,0 +1,1 @@
+python3 run_pretraining.py --albert_config_file=albert.custom.json --input_file=best2010_best2010.lm.tfrecord --output_dir=outputs_best2010.lm --export_dir=exports_best2010.lm --train_batch_size=32 --do_eval=True --use_tpu=False

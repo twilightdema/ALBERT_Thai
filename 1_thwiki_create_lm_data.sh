@@ -1,0 +1,1 @@
+python3 create_pretraining_data.py --input_file thwiki_thwiki.lm.untoken.txt --output_file thwiki_thwiki.lm.tfrecord --vocab_file thwiki_thwiki.lm.spm_vocab --spm_model_file thwiki_thwiki.lm.spm_model --dupe_factor 1
