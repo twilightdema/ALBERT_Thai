@@ -48,10 +48,10 @@ function run_task() {
 }
 
 run_task SST-2 1256 1e-5 20935 10000 32
-run_task MNLI 1000 3e-5 10000 10000 128
+run_task MNLI 1000 3e-5 10000 10000 32
 run_task CoLA 320 1e-5 5336 2500 16
 run_task QNLI 1986 1e-5 33112 15000 32
-run_task QQP 1000 5e-5 14000 10000 128
+run_task QQP 1000 5e-5 14000 10000 32
 run_task RTE 200 3e-5 800 400 32
 run_task STS-B 214 2e-5 3598 2000 16
 run_task MRPC 200 2e-5 800 400 32
