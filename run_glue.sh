@@ -29,7 +29,7 @@ INIT_CHECKPOINT="pretrained_models/albert_base/model.ckpt-best"
 #pip3 install -r requirements.txt
 
 function run_task() {
-  COMMON_ARGS="--output_dir="${OUTPUT_DIR}/$1" --data_dir="${GLUE_DATA_DIR}" --vocab_file="${SPM_VOCAB_PATH}" --spm_model_file="${SPM_MODEL_PATH}" --do_lower_case --max_seq_length=128 --optimizer=adamw --task_name=$1 --warmup_step=$2 --learning_rate=$3 --train_step=$4 --save_checkpoints_steps=$5 --train_batch_size=$6"
+  COMMON_ARGS="--output_dir="${OUTPUT_DIR}/$1" --data_dir="${GLUE_DATA_DIR}" --vocab_file="${SPM_VOCAB_PATH}" --spm_model_file="${SPM_MODEL_PATH}" --do_lower_case --max_seq_length=128 --optimizer=adamw --task_name=$1 --warmup_step=$2 --learning_rate=$3 --train_step=$4 --save_checkpoints_steps=$5 --iterations_per_loop=$5 --train_batch_size=$6"
   python3 -m run_classifier \
       ${COMMON_ARGS} \
       --do_train \
@@ -47,11 +47,11 @@ function run_task() {
       --albert_config_file="${ALBERT_CONFIG_FILE}"
 }
 
-run_task SST-2 1256 1e-5 20935 10000 32
-run_task MNLI 1000 3e-5 10000 10000 32
-run_task CoLA 320 1e-5 5336 2500 16
-run_task QNLI 1986 1e-5 33112 15000 32
-run_task QQP 1000 5e-5 14000 10000 32
-run_task RTE 200 3e-5 800 400 32
-run_task STS-B 214 2e-5 3598 2000 16
-run_task MRPC 200 2e-5 800 400 32
+run_task SST-2 1256 1e-5 20935 2093 32
+run_task MNLI 1000 3e-5 40000 4000 32
+run_task CoLA 320 1e-5 5336 533 16
+run_task QNLI 1986 1e-5 33112 3311 32
+run_task QQP 1000 5e-5 56000 5600 32
+run_task RTE 200 3e-5 800 80 32
+run_task STS-B 214 2e-5 3598 359 16
+run_task MRPC 200 2e-5 800 80 32
