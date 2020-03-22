@@ -30,5 +30,6 @@ python3 run_squad_v1.py \
   --num_train_epochs=2.0 \
   --warmup_proportion=.1 \
   --save_checkpoints_steps=1094 \
+  --iterations_per_loop=1094 \
   --n_best_size=20 \
   --max_answer_length=30
