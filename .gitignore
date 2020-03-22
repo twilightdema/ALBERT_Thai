@@ -121,6 +121,7 @@ output_*
 .vscode
 
 glue_data
+squad_data
 thwiki_thwiki.lm.*
 best2010_best2010.lm.*
 best2010_best2010.topic.*

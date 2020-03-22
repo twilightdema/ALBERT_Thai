@@ -188,16 +188,17 @@ def validate_flags_or_throw(albert_config):
           "If `do_train` is True, then `train_file` must be specified.")
   if FLAGS.do_predict:
     if not FLAGS.predict_file:
-      raise ValueError(
-          "If `do_predict` is True, then `predict_file` must be specified.")
-    if not FLAGS.predict_feature_file:
-      raise ValueError(
-          "If `do_predict` is True, then `predict_feature_file` must be "
-          "specified.")
-    if not FLAGS.predict_feature_left_file:
-      raise ValueError(
-          "If `do_predict` is True, then `predict_feature_left_file` must be "
-          "specified.")
+      if not FLAGS.predict_feature_file:
+        raise ValueError(
+            "If `do_predict` is True, then `predict_feature_file` must be "
+            "specified.")
+      elif not FLAGS.predict_feature_left_file:
+        raise ValueError(
+            "If `do_predict` is True, then `predict_feature_left_file` must be "
+            "specified.")
+      else:
+        raise ValueError(
+            "If `do_predict` is True, then `predict_file` must be specified.")
 
   if FLAGS.max_seq_length > albert_config.max_position_embeddings:
     raise ValueError(
@@ -271,7 +272,8 @@ def main(_):
       num_warmup_steps=num_warmup_steps,
       use_tpu=FLAGS.use_tpu,
       use_one_hot_embeddings=FLAGS.use_tpu,
-      hub_module=FLAGS.albert_hub_module_handle)
+      hub_module=FLAGS.albert_hub_module_handle,
+      use_einsum=False)
 
   # If TPU is not available, this will fall back to normal Estimator on CPU
   # or GPU.

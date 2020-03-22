@@ -718,7 +718,7 @@ def create_v1_model(albert_config, is_training, input_ids, input_mask,
       input_mask=input_mask,
       segment_ids=segment_ids,
       use_one_hot_embeddings=use_one_hot_embeddings,
-      use_einsum=use_einsum,
+      # use_einsum=use_einsum,
       hub_module=hub_module)
 
   final_hidden_shape = modeling.get_shape_list(final_hidden, expected_rank=3)
@@ -1439,7 +1439,7 @@ def create_v2_model(albert_config, is_training, input_ids, input_mask,
       input_mask=input_mask,
       segment_ids=segment_ids,
       use_one_hot_embeddings=use_one_hot_embeddings,
-      use_einsum=True,
+      # use_einsum=True,
       hub_module=hub_module)
 
   bsz = tf.shape(output)[0]
