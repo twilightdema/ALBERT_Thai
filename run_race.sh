@@ -20,11 +20,11 @@ python3 run_race.py \
   --max_qa_length=128 \
   --do_train=true \
   --do_eval=true \
-  --train_batch_size=32 \
-  --eval_batch_size=8 \
+  --train_batch_size=2 \
+  --eval_batch_size=2 \
   --learning_rate=1e-5 \
-  --train_step=12000 \
-  --warmup_step=1000 \
-  --save_checkpoints_steps=1200 \
-  --iterations_per_loop=1200
+  --train_step=192000 \
+  --warmup_step=16000 \
+  --save_checkpoints_steps=19200 \
+  --iterations_per_loop=19200
   
