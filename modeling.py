@@ -184,6 +184,9 @@ class AlbertModel(object):
     batch_size = input_shape[0]
     seq_length = input_shape[1]
 
+    # For operation related to debugging
+    self.debug_ops = []
+
     if input_mask is None:
       input_mask = tf.ones(shape=[batch_size, seq_length], dtype=tf.int32)
 
@@ -233,7 +236,9 @@ class AlbertModel(object):
             hidden_dropout_prob=config.hidden_dropout_prob,
             attention_probs_dropout_prob=config.attention_probs_dropout_prob,
             initializer_range=config.initializer_range,
-            do_return_all_layers=True)
+            do_return_all_layers=True,
+            debug_ops=self.debug_ops
+            )
 
       self.sequence_output = self.all_encoder_layers[-1]
       # The "pooler" converts the encoded sequence tensor of shape
@@ -736,7 +741,7 @@ def dense_layer_2d(input_tensor,
     return ret
 
 
-def dot_product_attention(q, k, v, bias, dropout_rate=0.0):
+def dot_product_attention(q, k, v, bias, dropout_rate=0.0, debug_ops=[]):
   """Dot-product attention.
 
   Args:
@@ -755,6 +760,10 @@ def dot_product_attention(q, k, v, bias, dropout_rate=0.0):
   logits = tf.multiply(logits, 1.0 / math.sqrt(float(get_shape_list(q)[-1])))
   if bias is not None:
     # `attention_mask` = [B, T]
+    
+    bias_shape = get_shape_list(bias)
+    debug_ops.append(tf.print('bias', bias_shape, bias))
+
     from_shape = get_shape_list(q)
     if len(from_shape) == 4:
       broadcast_ones = tf.ones([from_shape[0], 1, from_shape[2], 1], tf.float32)
@@ -763,8 +772,14 @@ def dot_product_attention(q, k, v, bias, dropout_rate=0.0):
       broadcast_ones = tf.ones([from_shape[0], 1, from_shape[2], from_shape[3],
                                 1], tf.float32)
 
+    broadcast_ones_shape = get_shape_list(broadcast_ones)
+    debug_ops.append(tf.print('broadcast_ones', broadcast_ones_shape, broadcast_ones))
+
     bias = tf.matmul(broadcast_ones,
                      tf.cast(bias, tf.float32), transpose_b=True)
+
+    bias_shape = get_shape_list(bias)
+    debug_ops.append(tf.print('bias (before filter)', bias_shape, bias))
 
     # Since attention_mask is 1.0 for positions we want to attend and 0.0 for
     # masked positions, this operation will create a tensor which is 0.0 for
@@ -793,7 +808,8 @@ def attention_layer(from_tensor,
                     initializer_range=0.02,
                     batch_size=None,
                     from_seq_length=None,
-                    to_seq_length=None):
+                    to_seq_length=None,
+                    debug_ops=[]):
   """Performs multi-headed attention from `from_tensor` to `to_tensor`.
 
   Args:
@@ -869,7 +885,7 @@ def attention_layer(from_tensor,
         attention_mask, [batch_size, 1, to_seq_length, 1])
     # 'new_embeddings = [B, N, F, H]'
   new_embeddings = dot_product_attention(q, k, v, attention_mask,
-                                         attention_probs_dropout_prob)
+                                         attention_probs_dropout_prob, debug_ops=debug_ops)
 
   return tf.transpose(new_embeddings, [0, 2, 1, 3])
 
@@ -883,7 +899,8 @@ def attention_ffn_block(layer_input,
                         intermediate_size=3072,
                         intermediate_act_fn=None,
                         initializer_range=0.02,
-                        hidden_dropout_prob=0.0):
+                        hidden_dropout_prob=0.0,
+                        debug_ops=[]):
   """A network with attention-ffn as sub-block.
 
   Args:
@@ -916,7 +933,8 @@ def attention_ffn_block(layer_input,
           attention_mask=attention_mask,
           num_attention_heads=num_attention_heads,
           attention_probs_dropout_prob=attention_probs_dropout_prob,
-          initializer_range=initializer_range)
+          initializer_range=initializer_range,
+          debug_ops=debug_ops)
 
     # Run a linear projection of `hidden_size` then add a residual
     # with `layer_input`.
@@ -964,7 +982,8 @@ def transformer_model(input_tensor,
                       hidden_dropout_prob=0.1,
                       attention_probs_dropout_prob=0.1,
                       initializer_range=0.02,
-                      do_return_all_layers=False):
+                      do_return_all_layers=False,
+                      debug_ops=[]):
   """Multi-headed, multi-layer Transformer from "Attention is All You Need".
 
   This is almost an exact implementation of the original Transformer encoder.
@@ -1033,7 +1052,8 @@ def transformer_model(input_tensor,
                   layer_output, hidden_size, attention_mask,
                   num_attention_heads, attention_head_size,
                   attention_probs_dropout_prob, intermediate_size,
-                  intermediate_act_fn, initializer_range, hidden_dropout_prob)
+                  intermediate_act_fn, initializer_range, hidden_dropout_prob,
+                  debug_ops=debug_ops)
               prev_output = layer_output
               all_layer_outputs.append(layer_output)
   if do_return_all_layers:
@@ -1134,3 +1154,28 @@ def assert_rank(tensor, expected_rank, name=None):
         "For the tensor `%s` in scope `%s`, the actual rank "
         "`%d` (shape = %s) is not equal to the expected rank `%s`" %
         (name, scope_name, actual_rank, str(tensor.shape), str(expected_rank)))
+
+if __name__ == '__main__':
+  print('Running unit test...')
+    # Already been converted from strings into ids
+  input_ids = tf.constant([[1, 6, 7, 8, 9, 0]])
+  input_mask = tf.constant([[1, 1, 1, 1, 1, 0]])
+  token_type_ids = tf.constant([[0, 2, 2, 2, 2, 0]])
+
+  config = AlbertConfig(vocab_size=200, hidden_size=256,
+    num_hidden_layers=1, num_attention_heads=2, intermediate_size=256)
+
+  model = AlbertModel(config=config, is_training=True,
+    input_ids=input_ids, input_mask=input_mask, token_type_ids=token_type_ids)
+
+  #label_embeddings = tf.get_variable(...)
+  pooled_output = model.get_pooled_output()
+  print(str(len(model.debug_ops)))
+  print(model.debug_ops)
+  with tf.Session() as sess:
+    sess.run(tf.global_variables_initializer())
+    vals = sess.run(model.debug_ops)
+    print(vals)
+
+  #logits = tf.matmul(pooled_output, label_embeddings)
+  print('Finished.')
