@@ -1159,7 +1159,14 @@ if __name__ == '__main__':
   print('Running unit test...')
     # Already been converted from strings into ids
   input_ids = tf.constant([[1, 6, 7, 8, 9, 0]])
-  input_mask = tf.constant([[1, 1, 1, 1, 1, 0]])
+  input_mask = tf.constant([[
+                            [1, 1, 1, 1, 1, 0],
+                            [0, 1, 1, 1, 1, 0],
+                            [0, 0, 1, 1, 1, 0],
+                            [0, 0, 0, 1, 1, 0],
+                            [0, 0, 0, 0, 1, 0],
+                            [0, 0, 0, 0, 0, 0],
+                            ]])
   token_type_ids = tf.constant([[0, 2, 2, 2, 2, 0]])
 
   config = AlbertConfig(vocab_size=200, hidden_size=256,
