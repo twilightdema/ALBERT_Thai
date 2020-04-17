@@ -764,19 +764,23 @@ def dot_product_attention(q, k, v, bias, dropout_rate=0.0, debug_ops=[]):
     bias_shape = get_shape_list(bias)
     debug_ops.append(tf.print('bias', bias_shape, bias))
 
-    from_shape = get_shape_list(q)
-    if len(from_shape) == 4:
-      broadcast_ones = tf.ones([from_shape[0], 1, from_shape[2], 1], tf.float32)
-    elif len(from_shape) == 5:
-      # from_shape = [B, N, Block_num, block_size, depth]#
-      broadcast_ones = tf.ones([from_shape[0], 1, from_shape[2], from_shape[3],
-                                1], tf.float32)
+    # Do broadcast only in case of mask_attention of 2D tensor
+    if bias_shape[-1] == 1:
+      from_shape = get_shape_list(q)
+      if len(from_shape) == 4:
+        broadcast_ones = tf.ones([from_shape[0], 1, from_shape[2], 1], tf.float32)
+      elif len(from_shape) == 5:
+        # from_shape = [B, N, Block_num, block_size, depth]#
+        broadcast_ones = tf.ones([from_shape[0], 1, from_shape[2], from_shape[3],
+                                  1], tf.float32)
 
-    broadcast_ones_shape = get_shape_list(broadcast_ones)
-    debug_ops.append(tf.print('broadcast_ones', broadcast_ones_shape, broadcast_ones))
+      broadcast_ones_shape = get_shape_list(broadcast_ones)
+      debug_ops.append(tf.print('broadcast_ones', broadcast_ones_shape, broadcast_ones))
 
-    bias = tf.matmul(broadcast_ones,
-                     tf.cast(bias, tf.float32), transpose_b=True)
+      bias = tf.matmul(broadcast_ones,
+                      tf.cast(bias, tf.float32), transpose_b=True)
+    else:
+      bias = tf.cast(bias, tf.float32)
 
     bias_shape = get_shape_list(bias)
     debug_ops.append(tf.print('bias (before filter)', bias_shape, bias))
@@ -794,6 +798,9 @@ def dot_product_attention(q, k, v, bias, dropout_rate=0.0, debug_ops=[]):
 
   attention_probs = tf.nn.softmax(logits, name="attention_probs")
   attention_probs = dropout(attention_probs, dropout_rate)
+
+  debug_ops.append(tf.print('attention_probs', attention_probs))
+  
   return tf.matmul(attention_probs, v)
 
 
@@ -881,8 +888,16 @@ def attention_layer(from_tensor,
   k = tf.transpose(k, [0, 2, 1, 3])
   v = tf.transpose(v, [0, 2, 1, 3])
   if attention_mask is not None:
-    attention_mask = tf.reshape(
-        attention_mask, [batch_size, 1, to_seq_length, 1])
+    # In case of attention mask is 3D tensor of dimension [B, F, T], we reshape it differently
+    attention_mask_shape = get_shape_list(attention_mask)
+    print('ATTENTION MASK SHAPE = ' + str(attention_mask_shape))
+    if len(attention_mask_shape) == 2:
+      attention_mask = tf.reshape(
+          attention_mask, [batch_size, 1, to_seq_length, 1])
+    else:
+      attention_mask = tf.transpose(attention_mask, [0, 2, 1]) # Switch T <=> F
+      attention_mask = tf.reshape(
+          attention_mask, [batch_size, 1, to_seq_length, from_seq_length])
     # 'new_embeddings = [B, N, F, H]'
   new_embeddings = dot_product_attention(q, k, v, attention_mask,
                                          attention_probs_dropout_prob, debug_ops=debug_ops)
@@ -1158,16 +1173,34 @@ def assert_rank(tensor, expected_rank, name=None):
 if __name__ == '__main__':
   print('Running unit test...')
     # Already been converted from strings into ids
-  input_ids = tf.constant([[1, 6, 7, 8, 9, 0]])
-  input_mask = tf.constant([[
+  input_ids = tf.constant([[1, 6, 7, 8, 9, 0], [1, 6, 7, 8, 9, 0]])
+  
+  input_mask = tf.constant([
+                            [
+                              [1, 1, 1, 1, 1, 0],
+                              [0, 1, 1, 1, 1, 0],
+                              [0, 0, 1, 1, 1, 0],
+                              [0, 0, 0, 1, 1, 0],
+                              [0, 0, 0, 0, 1, 0],
+                              [0, 0, 0, 0, 0, 0],
+                            ],
+                            [
+                              [1, 1, 1, 1, 1, 0],
+                              [0, 1, 1, 1, 1, 0],
+                              [0, 0, 1, 1, 1, 0],
+                              [0, 0, 0, 1, 1, 0],
+                              [0, 0, 0, 0, 1, 0],
+                              [0, 0, 0, 0, 0, 0],
+                            ],
+                            ])
+  '''
+  input_mask = tf.constant([
                             [1, 1, 1, 1, 1, 0],
-                            [0, 1, 1, 1, 1, 0],
-                            [0, 0, 1, 1, 1, 0],
-                            [0, 0, 0, 1, 1, 0],
-                            [0, 0, 0, 0, 1, 0],
-                            [0, 0, 0, 0, 0, 0],
-                            ]])
-  token_type_ids = tf.constant([[0, 2, 2, 2, 2, 0]])
+                            [1, 1, 1, 1, 1, 0],
+                            ])
+  '''
+
+  token_type_ids = tf.constant([[0, 2, 2, 2, 2, 0], [0, 2, 2, 2, 2, 0]])
 
   config = AlbertConfig(vocab_size=200, hidden_size=256,
     num_hidden_layers=1, num_attention_heads=2, intermediate_size=256)
