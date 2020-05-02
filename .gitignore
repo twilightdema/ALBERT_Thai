@@ -129,3 +129,5 @@ best2010_best2010.topic.*
 truevoice_truevoice.*
 wisesight_wisesight.*
 wongnai_wongnai.*
+
+*.tfrecord
